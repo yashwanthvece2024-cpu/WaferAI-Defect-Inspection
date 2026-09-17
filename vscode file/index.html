@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaferAI Operation Engine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-dark: #0A0A0A;
+            --text-light: #FAFAFA;
+            --text-muted: #A0AEC0;
+            --neon-blue: #00F0FF;
+            --neon-purple: #8A2BE2;
+            --gradient-accent: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-dark); 
+            color: var(--text-light); 
+            line-height: 1.6; 
+            overflow-x: hidden; 
+        }
+
+        nav {
+            position: fixed; top: 0; width: 100%; padding: 1.2rem 5%;
+            background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            display: flex; justify-content: space-between; align-items: center; z-index: 99999;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .logo { font-weight: 800; font-size: 1.2rem; color: var(--neon-blue); cursor: pointer; }
+        .logo span { color: var(--text-light); }
+        .nav-links { display: flex; gap: 2rem; list-style: none; }
+        .nav-links li { cursor: pointer; color: var(--text-light); font-weight: 600; font-size: 0.9rem; transition: color 0.3s ease; padding-bottom: 5px; }
+        .nav-links li:hover { color: var(--neon-blue); }
+        .nav-links li.active-nav { color: var(--neon-blue); border-bottom: 2px solid var(--neon-blue); }
+
+        .tab-content { display: none; padding: 130px 5% 50px 5%; min-height: 100vh; position: relative; z-index: 1; }
+        .tab-content.active-tab { display: block; }
+
+        /* GitHub Pages Background Path */
+        #home {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100vw;
+            min-height: 100vh;
+            background: linear-gradient(rgba(10, 10, 10, 0.4), rgba(10, 10, 10, 0.8)), url('./Gemini_Generated_Image_9bh11y9bh11y9bh1.png') center/cover no-repeat fixed;
+            align-items: center;
+            justify-content: center;
+        }
+        #home.active-tab {
+            display: flex !important;
+        }
+
+        .glass-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 2.5rem; width: 100%; max-width: 1200px; margin: 0 auto 2rem auto; }
+        
+        .upload-box { border: 2px dashed #8A2BE2; border-radius: 12px; padding: 3rem; text-align: center; margin-bottom: 2rem; cursor: pointer; background: rgba(138, 43, 226, 0.05); transition: 0.3s; position: relative; z-index: 10; }
+        .upload-box:hover { background: rgba(138, 43, 226, 0.1); border-color: var(--neon-blue); }
+        
+        .result-block { background: rgba(20,20,20,0.8); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 2.5rem; margin: 0 auto 2rem auto; width: 100%; max-width: 1200px; }
+        
+        .images-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 1.5rem; }
+        .result-img-box { background: #000; padding: 1.5rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08); text-align: center;}
+        .result-img-box.red-box { border-color: #FF3333; }
+        .result-img-box h4 { margin-bottom: 15px; font-size: 1.05rem; }
+        .result-img-box.red-box h4 { color: #FF3333; }
+        .result-img-box img { width: 100%; aspect-ratio: 1/1; object-fit: contain; background: #000; }
+        
+        .data-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+        .data-panel { background: rgba(10,10,10,0.8); padding: 1.2rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08); }
+        .data-panel.purple-box { border-color: var(--neon-purple); }
+        .data-panel h4 { margin-bottom: 1rem; font-size: 1rem; display: flex; align-items: center; gap: 8px; color: var(--text-light); }
+        
+        .specs-list { list-style: none; color: var(--text-muted); font-size: 0.88rem; }
+        .specs-list li { margin-bottom: 0.6rem; display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.3rem; }
+        .specs-list li:last-child { border-bottom: none; }
+        .specs-list strong { color: var(--text-light); }
+
+        .stats-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; text-align: center; width: 100%; max-width: 1200px; margin: 0 auto; }
+        .stat-circle { font-size: 3.5rem; font-weight: 800; background: var(--gradient-accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .btn-export { display: none; margin: 0 auto 2rem auto; padding: 12px 24px; background: var(--neon-purple); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 1rem; position: relative; z-index: 10; }
+        .btn-export:hover { background: var(--neon-blue); box-shadow: 0 0 15px rgba(0, 240, 255, 0.5); }
+        
+        button { cursor: pointer; position: relative; z-index: 10; }
+    </style>
+</head>
+<body>
+    
+    <nav>
+        <div class="logo" onclick="switchTab('operation')">Wafer<span>AI.</span></div>
+        <ul class="nav-links">
+            <li id="nav-home" class="active-nav" onclick="switchTab('home')">Home</li>
+            <li id="nav-overview" onclick="switchTab('overview')">Overview</li>
+            <li id="nav-operation" onclick="switchTab('operation')">Operation Engine</li>
+            <li id="nav-performance" onclick="switchTab('performance')">Performance</li>
+        </ul>
+    </nav>
+
+    <section id="home" class="tab-content active-tab">
+        <div style="max-width: 1000px; width: 100%; margin: auto; padding: 40px; text-align: left;">
+            <h1 style="font-size: 4.5rem; line-height: 1.1; margin-bottom: 1.5rem; color: var(--text-light); font-weight: 800;">Semiconductor Defect<br>Inspection & Diagnostics</h1>
+            <p style="font-size: 1.3rem; color: var(--text-light); margin-bottom: 2.5rem; max-width: 800px; font-weight: 400;">AI-powered semiconductor defect detection using Deep Learning and Computer Vision. Ensuring high yield and flawless manufacturing.</p>
+            <div style="display: flex; gap: 1rem; position: relative; z-index: 10;">
+                <button onclick="switchTab('operation')" style="font-size: 1.1rem; padding: 15px 30px; border-radius: 8px; background: linear-gradient(90deg, #00F0FF, #8A2BE2); color: white; border: none; font-weight: bold; box-shadow: 0 0 15px rgba(138, 43, 226, 0.4);">🚀 Enter Operation Engine</button>
+                <button onclick="switchTab('overview')" style="font-size: 1.1rem; padding: 15px 30px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid #00F0FF; font-weight: bold; backdrop-filter: blur(5px);">Explore Features</button>
+            </div>
+        </div>
+    </section>
+    
+    <section id="overview" class="tab-content">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <h2 style="font-size: 2.2rem; margin-bottom: 2rem; color: var(--text-light); text-align: center;">System Capabilities & Dataset</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem;">
+                <div class="glass-card" style="margin: 0;">
+                    <h3 style="color: var(--neon-blue); border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px; margin-bottom: 15px;">🔍 9 Primary WM-811K Defect Classes</h3>
+                    <ul class="specs-list">
+                        <li><span>Center:</span> <strong>Core topological clusters</strong></li>
+                        <li><span>Donut:</span> <strong>Mid-radius circular ring faults</strong></li>
+                        <li><span>Edge-Ring:</span> <strong>Continuous perimeter failures</strong></li>
+                        <li><span>Edge-Loc:</span> <strong>Perimeter concentrated dead dies</strong></li>
+                        <li><span>Loc:</span> <strong>Localized clustered failures</strong></li>
+                        <li><span>Scratch:</span> <strong>Linear/arcuate mechanical abrasions</strong></li>
+                        <li><span>Random:</span> <strong>Unstructured particle scattering</strong></li>
+                        <li><span>Near-Full:</span> <strong>Widespread catastrophic damage</strong></li>
+                        <li><span>None:</span> <strong>Flawless structural integrity</strong></li>
+                    </ul>
+                </div>
+                <div class="glass-card" style="margin: 0;">
+                    <h3 style="color: var(--neon-purple); border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px; margin-bottom: 15px;">📚 Industry-Standard Dataset</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.95rem;">Aligned with the globally recognized <strong>WM-811K Semiconductor Dataset</strong> parameters.</p>
+                    <ul class="specs-list">
+                        <li><span>Total Validated Wafer Maps:</span> <strong style="color: #00FF00; font-size: 1.1rem;">811,457</strong></li>
+                        <li><span>Defect Categories Indexed:</span> <strong>9 Primary Classes</strong></li>
+                        <li><span>Target Model Accuracy:</span> <strong style="color: var(--neon-blue);">89.9% - 96.7%</strong></li>
+                        <li><span>Classification Engine:</span> <strong>Multi-Class Feature Vector ML</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="operation" class="tab-content">
+        <div class="glass-card" style="border-color: var(--neon-purple);">
+            <h2 style="text-align: center; margin-bottom: 0.5rem; font-size: 1.6rem;">🚀 High-Accuracy 9-Class ML Workstation</h2>
+            
+            <form id="upload-form">
+                <div class="upload-box" onclick="document.getElementById('file-input').click()">
+                    <i class="fa-solid fa-microchip" style="font-size: 2.5rem; color: var(--neon-purple); margin-bottom: 1rem;"></i>
+                    <h3 style="font-size: 1.2rem; margin-bottom: 5px;">Upload Wafer Batch for ML Analysis</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Extracts 9-class feature vectors, maps 1,000 dies, and computes mitigation.</p>
+                    <input type="file" id="file-input" name="files" accept="image/*" multiple style="display: none;" onchange="processBatchStatic()">
+                </div>
+            </form>
+
+            <div id="loading" style="display: none; text-align: center; padding: 2rem;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 2.5rem; color: var(--neon-purple);"></i>
+                <p style="margin-top: 1rem; color: var(--text-muted);">Extracting feature vectors and executing 9-class ML classifier...</p>
+            </div>
+        </div>
+
+        <button id="btn-export" class="btn-export" onclick="downloadCSV()">📥 Download QA Batch Report (CSV)</button>
+
+        <div id="results-container" style="width: 100%; display: flex; flex-direction: column; align-items: center;"></div>
+    </section>
+
+    <section id="performance" class="tab-content">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <h2 style="font-size: 2.2rem; margin-bottom: 2rem; color: var(--text-light); text-align: center;">Model Benchmarks (9-Class Validation)</h2>
+            <div class="stats-container">
+                <div class="glass-card" style="text-align: center; margin: 0;">
+                    <div class="stat-circle">94.8%</div>
+                    <h3 style="margin-top: 10px;">Mean Accuracy</h3>
+                </div>
+                <div class="glass-card" style="text-align: center; margin: 0;">
+                    <div class="stat-circle">93.2%</div>
+                    <h3 style="margin-top: 10px;">Precision</h3>
+                </div>
+                <div class="glass-card" style="text-align: center; margin: 0;">
+                    <div class="stat-circle">94.1%</div>
+                    <h3 style="margin-top: 10px;">Recall</h3>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        let currentBatchData = [];
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
+            document.getElementById(tabId).classList.add('active-tab');
+            
+            document.querySelectorAll('.nav-links li').forEach(item => item.classList.remove('active-nav'));
+            if(document.getElementById('nav-' + tabId)) document.getElementById('nav-' + tabId).classList.add('active-nav');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // STATIC SIMULATION FOR GITHUB PAGES
+        function processBatchStatic() {
+            const fileInput = document.getElementById('file-input');
+            if (fileInput.files.length === 0) return;
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results-container').innerHTML = '';
+            document.getElementById('btn-export').style.display = 'none';
+
+            // Simulate the Python backend processing time
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+                
+                // Show a quick alert so portfolio viewers understand it's a frontend demo
+                alert("Note: This is a static GitHub Pages demo. The Python backend is disabled. Generating simulated machine learning output for portfolio demonstration.");
+
+                currentBatchData = [];
+                const container = document.getElementById('results-container');
+                
+                // Loop through uploaded files to generate simulated data for each
+                for(let i = 0; i < fileInput.files.length; i++) {
+                    const filename = fileInput.files[i].name;
+                    const defectTypes = ["Edge-Ring", "Center", "Scratch", "Random", "Donut"];
+                    const mitigations = [
+                        "ACTION REQUIRED: Calibrate spin-coating RPM acceleration profile to prevent edge fluid pooling.",
+                        "ACTION REQUIRED: Calibrate chemical vapor deposition (CVD) gas nozzle focus over wafer center.",
+                        "ACTION REQUIRED: Check robotic wafer-handling arm tracks and mechanical transport cassettes.",
+                        "ACTION REQUIRED: Inspect cleanroom HEPA filters and chamber particle scattering.",
+                        "ACTION REQUIRED: Inspect mid-radius thermal heating zones and rapid thermal processing (RTP) lamps."
+                    ];
+                    
+                    const randIndex = Math.floor(Math.random() * defectTypes.length);
+                    const healthy = Math.floor(Math.random() * (950 - 700 + 1)) + 700;
+                    const bad = 1000 - healthy;
+                    const yieldP = (healthy / 10).toFixed(2);
+                    const conf = (Math.random() * (98.5 - 89.0) + 89.0).toFixed(2);
+
+                    const simData = {
+                        filename: filename,
+                        defect_type: defectTypes[randIndex],
+                        confidence: conf,
+                        total_dies: 1000,
+                        healthy_dies: healthy,
+                        bad_dies: bad,
+                        yield_percent: yieldP,
+                        mitigation: mitigations[randIndex],
+                        latency: Math.floor(Math.random() * (350 - 180 + 1)) + 180,
+                        transistor_count: (Math.random() * (8.6 - 8.1) + 8.1).toFixed(2) + " Trillion (5nm)"
+                    };
+                    
+                    currentBatchData.push(simData);
+
+                    const block = document.createElement('div');
+                    block.className = 'result-block';
+                    block.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1.2rem; color: var(--text-light);"><i class="fa-solid fa-file-image"></i> Wafer ID: ${simData.filename}</h3>
+                            <span style="background: rgba(138, 43, 226, 0.1); color: var(--neon-purple); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; border: 1px solid var(--neon-purple);">⏱️ ML Inference: ${simData.latency} ms</span>
+                        </div>
+                        
+                        <div class="images-grid">
+                            <div class="result-img-box" style="border-color: rgba(0, 240, 255, 0.5);">
+                                <h4 style="color: var(--neon-blue);">1. Filtered Topology</h4>
+                                <img src="https://via.placeholder.com/400x400/0A0A0A/00F0FF?text=Topology+Mask+Processed">
+                            </div>
+                            <div class="result-img-box" style="border-color: rgba(0, 255, 0, 0.3);">
+                                <h4 style="color: var(--neon-blue);">2. Labeled ~1000 Die Grid</h4>
+                                <img src="https://via.placeholder.com/400x400/0A0A0A/00FF00?text=Die+Grid+Extraction">
+                            </div>
+                            <div class="result-img-box red-box">
+                                <h4>3. Defect Bounding Box (ROI)</h4>
+                                <img src="https://via.placeholder.com/400x400/0A0A0A/FF3333?text=ROI+Bounding+Box">
+                            </div>
+                        </div>
+
+                        <div class="data-grid">
+                            <div class="data-panel">
+                                <h4><span style="color: #FF8C00;">⚡</span> Wafer Characteristics</h4>
+                                <ul class="specs-list">
+                                    <li><span>Diameter:</span> <strong>300 mm (± 0.2 mm)</strong></li>
+                                    <li><span>Thickness:</span> <strong>775 µm</strong></li>
+                                    <li><span>Doping:</span> <strong>P-type (Boron)</strong></li>
+                                    <li><span>Breakdown V:</span> <strong>≥ 450 V</strong></li>
+                                    <li><span>Transistors:</span> <strong style="color: #00FF00;">${simData.transistor_count}</strong></li>
+                                </ul>
+                            </div>
+
+                            <div class="data-panel">
+                                <h4><span style="color: #FFB6C1;">🤖</span> ML 9-Class Prediction</h4>
+                                <ul class="specs-list">
+                                    <li style="border-bottom: none; display: flex; flex-direction: column; gap: 8px; margin-top: 2px;">
+                                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px;">
+                                            <span>Primary Defect:</span> 
+                                            <strong style="color: var(--neon-blue); font-size: 1rem;">${simData.defect_type}</strong>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; padding-top: 2px;">
+                                            <span>Confidence:</span> 
+                                            <strong style="color: #00FF00; font-size: 1rem;">${simData.confidence}%</strong>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="data-panel purple-box">
+                                <h4>🏭 Sample Die Yield</h4>
+                                <ul class="specs-list">
+                                    <li><span>Tested Dies:</span> <strong>${simData.total_dies}</strong></li>
+                                    <li><span>Healthy Units:</span> <span style="color: #00FF00; font-weight: bold;">${simData.healthy_dies}</span></li>
+                                    <li><span>Defective Units:</span> <span style="color: #FF3333; font-weight: bold;">${simData.bad_dies}</span></li>
+                                    <li style="margin-top: 2px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 6px; border-bottom: none;">
+                                        <span>Yield:</span> 
+                                        <strong style="font-size: 1.1rem; color: ${simData.yield_percent > 90 ? '#00FF00' : '#FF3333'};">${simData.yield_percent}%</strong>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="data-panel" style="border-color: #FFD700;">
+                                <h4><span style="color: #FFD700;">🛠️</span> Mitigation</h4>
+                                <p style="color: var(--text-light); font-size: 0.85rem; margin-top: 4px; line-height: 1.4; background: rgba(255, 215, 0, 0.05); padding: 8px; border-radius: 6px; border-left: 3px solid #FFD700;">
+                                    ${simData.mitigation}
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(block);
+                }
+                
+                document.getElementById('btn-export').style.display = 'block';
+                fileInput.value = '';
+            }, 1500);
+        }
+
+        function downloadCSV() {
+            if (currentBatchData.length === 0) return;
+            
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Wafer ID,Primary Defect Classification,AI Confidence (%),Total Validated Dies,Healthy Dies,Destroyed Dies,Yield (%),Inference Latency (ms),Root Cause Mitigation Recommendation\\n";
+            
+            currentBatchData.forEach(res => {
+                let mitigationSafe = res.mitigation.replace(/,/g, ";");
+                csvContent += `${res.filename},${res.defect_type},${res.confidence},${res.total_dies},${res.healthy_dies},${res.bad_dies},${res.yield_percent},${res.latency},${mitigationSafe}\\n`;
+            });
+            
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "WaferAI_9Class_Report_SIMULATED.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
