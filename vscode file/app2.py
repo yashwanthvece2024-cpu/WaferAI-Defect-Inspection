@@ -39,7 +39,6 @@ HTML_TEMPLATE = '''
             overflow-x: hidden; 
         }
 
-        /* Background image now scoped ONLY to the #home section */
         #home {
             background-image: linear-gradient(rgba(10, 10, 10, 0.55), rgba(10, 10, 10, 0.75)), url('/assets/image_faf409.jpg?v=1');
             background-size: cover;
@@ -587,4 +586,4 @@ def inspect_wafer():
     return jsonify({'results': processed_results})
 
 if __name__ == '__main__':
-    app.run(port=8000, debug=True)
+    app.run(host='0.0.0.0', port=8000, debug=True, use_reloader=False)
